@@ -12,6 +12,13 @@ function getLevelSpriteXY(x, y) {
     return getLevelSprite(x / size.tile.target.w, line_nr);
 }
 
+function getLevelSpriteYX(x, y) {
+
+    line_nr = Math.round(y / size.tile.target.h - line_offset_y);
+    if (line_nr <= 0){line_nr = 0}
+    return getLevelSprite(x / size.tile.target.w, line_nr);
+}
+
 function getLevelSprite(pos, line) {
     return current_level.level[line].charAt(pos);
 }
@@ -53,6 +60,8 @@ function getLastLevelSpritePosition(type, x) {
 }
 
 var blocks = {};
+blocks['B'] = {sx:1, sy:6, collide:true, type:'exitA'};
+blocks['N'] = {sx:7, sy:0, collide:true, type:'exitB'};
 blocks['#'] = {sx:5, sy:0, collide:true, solid:true};
 blocks['x'] = {sx:0, sy:0, collide:true, solid:true};
 blocks['H'] = {sx:2, sy:2, collide:true, solid:true};
@@ -69,15 +78,17 @@ blocks['y'] = {sx:13, sy:13, type:'respawn'};
 blocks['~'] = {sx:9, sy:0, collide:true, type:'trampoline'};
 blocks['ß'] = {sx:1, sy:11, collide:true, solid:true};
 blocks['?'] = {sx:0, sy:11, collide:true, solid:true, type:'block_coin'};
-blocks['B'] = {sx:1, sy:6, collide:true, type:'exit'};
 blocks['h'] = {sx:12, sy:6, collide:true, deadly:true};
 blocks['@'] = {sx:9, sy:2, collide:true, deadly:true};
 blocks['p'] = {sx:0, sy:12, deadly:true, solid:true, type:'enemy_mushroom', speed_x:4};
+blocks['o'] = {sx:12, sy:3, deadly:true, solid:true, type:'enemy_fairy', speed_y:3};
 blocks['/'] = {sx:0, sy:1};
 blocks['^'] = {sx:1, sy:0};
 blocks['ü'] = {sx:1, sy:1};
 blocks['g'] = {sx:4, sy:1};
+blocks['ö'] = {sx:3, sy:1};
 blocks['`'] = {sx:2, sy:1};
+blocks['!'] = {sx:10, sy:2, collide:true, deadly:true};
 blocks['{'] = {sx:2, sy:0};
 blocks['='] = {sx:3, sy:0};
 blocks['}'] = {sx:4, sy:0};
@@ -141,5 +152,5 @@ function prerenderLevelObjects() {
 
 Object.prototype.cloneBlock = function () {
     return {sx:this.sx, sy:this.sy, collide:this.collide, deadly:this.deadly,
-        solid:this.solid, speed_x:this.speed_x, type:this.type, x:this.x, y:this.y};
+        solid:this.solid, speed_x:this.speed_x, speed_y:this.speed_y, type:this.type, x:this.x, y:this.y};
 };

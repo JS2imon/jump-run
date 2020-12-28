@@ -9,7 +9,7 @@ var debug = false;
 
 // default theme and level
 var theme = 'suse'
-var current_level = levels[1];
+var current_level = levels[3];
 
 var gameInterval;
 var score
@@ -28,6 +28,7 @@ var collisionMap;
 var filterStrength = 20;
 var frameTime = 0, lastLoop = new Date, thisLoop;
 
+var lvl = null;
 
 // speed, gravity parameters
 var speed = {
@@ -119,6 +120,9 @@ function drawLevel() {
                     if (object.type == 'enemy_mushroom') {
                         items.push(object.cloneBlock());
                         replaceLevelSprite(index_x, index_y - line_offset_y, " ");
+                    } else if (object.type == 'enemy_fairy') {
+                        items.push(object.cloneBlock());
+                        replaceLevelSprite(index_x, index_y - line_offset_y, " ");
                     } else if (object.type == 'coin') {
                         items.push(object.cloneBlock());
                         replaceLevelSprite(index_x, index_y - line_offset_y, " ");
@@ -197,7 +201,7 @@ function updateCharacters() {
                     if (object.type == 'block_coin') {
                         replaceLevelSpriteXY(object.x, object.y, "ß");
                         items.push({ sx:8, sy:9, x:object.x, y:(object.y - size.tile.target.h), type:'coin' });
-                    } else {
+                    } else {line_offset_y
                         actor.pos.y = object.y + size.tile.target.h;
                         actor.speed.y = 1;
                     }
@@ -210,6 +214,15 @@ function updateCharacters() {
                         score++;
                         sound_jump_on_enemy()
                     }
+
+                    if (object.type == 'enemy_fairy') {
+                        object.deadly = false
+                        object.speed = 0
+                        object.sx = 2
+                        score++;
+                        sound_jump_on_enemy()
+                    }
+
                     actor.pos.y = object.y - actor.target_size.h;
                     actor.speed.y = 0;
                 } else if (collides.right) {
@@ -227,11 +240,14 @@ function updateCharacters() {
                     //items.push({ sx:, sy:9, x:actor.pos.x, y:actor.pos.y, deadly:false, type:'looser' });
                     gameOver()
                 }
-                if (object.type == 'exit') {
-                    levelWin()
+                if (object.type == 'exitA') {
+                    levelWinA()
+                }
+                if (object.type == 'exitB') {
+                    levelWinB()
                 }
                 if (object.type == 'trampoline') {
-                    actor.speed.y < 0 ? actor.speed.y = 0 : true
+                    actor.speed.y < 0 ? actor.speed.y = 50 : true
                     sound_jump()
                     actor.speed.y = -0.5 * actor.speed.y - 25
                 }
@@ -287,12 +303,13 @@ function checkCollision(actor, object) {
         if (actor.pos.x.inRange(object.x, object.x + size.tile.target.w)) {
             collides.left = true;
         }
+
     }
     return collides;
 }
 
 
-function animate_actor(actor) {
+function animate_actor(actor) { /** get the right sprite **/
     if (actor.speed.x > 0) {
         actor.sprite.y = actor.source_size.h;
     } else if (actor.speed.x < 0) {
@@ -323,7 +340,6 @@ function updateElements() {
         if (item.type == 'enemy_mushroom') {
             // animate
             if (ticks % 4 == 0) {
-                // animate
                 if (item.sx == 0) {
                     item.sx = 1;
                 } else if (item.sx == 1) {
@@ -341,11 +357,45 @@ function updateElements() {
             sprite_bottom = getLevelSpriteXY(item.x + size.tile.target.w / 2, item.y + size.tile.target.h)
             // turn around on collide or above edge
             if ((blocks[sprite_collide] && blocks[sprite_collide].collide) ||
-                (!blocks[sprite_bottom] || !blocks[sprite_bottom].collide || blocks[sprite_bottom].deadly) || item.x <= 0) {
+                (!blocks[sprite_bottom] || !blocks[sprite_bottom].collide || blocks[sprite_bottom].deadly) ||
+                item.x <= 0 ) {
                 item.speed_x *= -1
             }
             item.x += item.speed_x
 
+        }
+
+        if (item.type == 'enemy_fairy') {
+          // animate
+            if (ticks % 4 == 0) {
+              // animate
+              if (item.sx == 0) {
+                  item.sx = 1;
+              } else if (item.sx == 1) {
+                  item.sx = 0;
+              } else if (item.sx == 2) {
+                  items.splice(items.indexOf(item), 1);
+              }
+          }
+          // move
+          if (item.speed_y > 0) {
+              sprite_collide = getLevelSpriteYX(item.x, item.y + size.tile.target.h /2)
+          }
+
+          else {
+              sprite_collide = getLevelSpriteYX(item.x, item.y-size.tile.target.h /2)
+          }
+              sprite_bottom = getLevelSpriteYX(item.x + size.tile.target.w, item.y + size.tile.target.h)
+
+          // turn around on collide or above edge
+         if ((blocks[sprite_collide] && blocks[sprite_collide].collide) ||
+           (blocks[sprite_collide] && blocks[sprite_collide].collide)
+           ||
+           item.y <= 0 || item.y >= 900)
+         {
+              item.speed_y *= -1
+          }
+            item.y += item.speed_y
         }
     })
 
@@ -412,16 +462,39 @@ function gameOver() {
     } else {
         // todo: dying animation
         actors = []
-        showGameOver()
+        //showGameOver()
+        levelGameOver()
     }
 }
 
-function levelWin() {
+function levelWinA() {
     sound_success()
     // todo:  winning animation
     actors = [];
-    // todo: level done menu
+    lvl = lvl+1;
     showGameOver()
+//  startGame()
+
+}
+function levelWinB() {
+    sound_success()
+    // todo:  winning animation
+    actors = [];
+    lvl = lvl+1;
+    showGameOver()
+
+}
+
+function levelGameOver() {
+      sound_gameover()
+      showGameOver()
+}
+
+function nextLevel(x) {
+  alert("call next level");
+  current_level = levels[x];
+ initGame();
+  startGame();
 }
 
 function initializeLevel() {
@@ -434,6 +507,7 @@ function initializeLevel() {
     resetPlayer()
     scroll_x = player.pos.x - (document.documentElement.clientWidth - 4) / 2
     theme = current_level.theme
+
 }
 
 function resetPlayer() {
@@ -542,4 +616,3 @@ window.onload = function () {
 window.onresize = function () {
     initGame();
 }
-
